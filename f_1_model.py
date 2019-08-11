@@ -1,13 +1,3 @@
-import multible_table
-
-
-def sum_2_num(num1, num2):
-    result = num1 + num2
-    # print("%d + %d = %d" % (num1, num2, result))
-    multible_table.mul_table()
-    return result
-
-
 def print_line(char, count, line_num):
     """打印任意行注释
 
@@ -25,7 +15,4 @@ def print_line(char, count, line_num):
         c += 1
 
 
-# result = sum_2_num(10, 20)
-# print('函数返回的结果:%d' % result)
-print_line('*', 50, 5)
-
+name = '樊家富'
