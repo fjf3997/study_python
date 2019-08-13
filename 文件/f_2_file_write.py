@@ -1,0 +1,5 @@
+file = open("README[复件]", "a")
+file.write("\rgood morning")
+file.close()
+file = open("README[复件]", "w")
+file.write("hello")
