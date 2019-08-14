@@ -11,7 +11,7 @@ def send_msg(udp_socket):
 
 def recv_meg(udp_socket):
     recv_data = udp_socket.recvfrom(1024)
-    print("%s:%s" % (str(recv_data[1]),recv_data[0].decode("gbk")))
+    print("%s:%s" % (str(recv_data[1]), recv_data[0].decode("gbk")))
 
 
 def main():
