@@ -8,7 +8,6 @@ def download_data(q):
         q.put(d)
 
 
-
 def process_data(q):
     data = list()
     while True:
@@ -17,6 +16,7 @@ def process_data(q):
         if q.empty():
             break
     print(data)
+
 
 def main():
     q = multiprocessing.Queue()
