@@ -32,7 +32,6 @@ def server_response(new_socket):
         new_socket.send(body)
     new_socket.close()
 
-
 def main():
     web_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     web_server.bind(("", 7890))
@@ -40,7 +39,7 @@ def main():
     while True:
         temp_socket, client_address = web_server.accept()
         print("接受的的客户地址:", client_address)
-        p = multiprocessing.process(target=server_response, args=(temp_socket,))
+        p = multiprocessing.Process(target=server_response, args=(temp_socket,))
         p.start()
         temp_socket.close()
     web_server.close()
