@@ -2,16 +2,19 @@ import socket
 import re
 import multiprocessing
 import time
+import sys
+import dynamic.mini_frame
 
 
 class WsgiServer:
-    def __init__(self):
+    def __init__(self, application, port, static_path):
         self.web_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # 允许立即使用上次绑定的port
         self.web_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.web_server.bind(("", 7890))
+        self.web_server.bind(("", port))
         self.web_server.listen(128)
-
+        self.application = application
+        self.static_path = static_path
     def server_response(self, new_socket):
         # header = ""
         # body = ""
@@ -30,29 +33,43 @@ class WsgiServer:
             if file_url == "/":
                 file_url = "/index.html"
             # print(file_url)
-        header = "HTTP/1.1 200 OK\r\n\r\n"
-        if file_url.endswith(".py"):
-            header = "HTTP/1.1 200 OK\r\n\r\n"
-            body = "hhhhh%s" % time.ctime()
+
+        # if file_url.endswith(".py"):
+        #     header = "HTTP/1.1 200 OK\r\n\r\n"
+        #     body = "hhhhh%s" % time.ctime()
+        #     response = header + body
+        #     new_socket.send(response.encode("utf-8"))
+        #     return
+        if not file_url.endswith(".py"):
+            try:
+                f = open(self.static_path+file_url, "rb")
+                body = f.read()
+                f.close()
+            except Exception as result:
+                header = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
+                new_socket.send(header.encode("utf-8"))
+                new_socket.send("<h1>not found file</h1>".encode("utf-8"))
+                print(result)
+            else:
+                header = "HTTP/1.1 200 OK\r\n\r\n"
+                new_socket.send(header.encode("utf-8"))
+                new_socket.send(body)
+        else:
+            env = dict()
+            env['PATH_INFO'] = file_url
+            body = self.application(env, self.set_response_header)
+            header = "HTTP/1.1 " + self.status + "\r\n"
+            for one in self.headers:
+                header += "%s:%s\r\n" % (one[0], one[1])
+            header += "\r\n"
             response = header + body
             new_socket.send(response.encode("utf-8"))
-            return
+        new_socket.close()
 
-        try:
-            f = open("html"+file_url, "rb")
-            body = f.read()
-            f.close()
-        except Exception as result:
-            header = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
-            new_socket.send(header.encode("utf-8"))
-            new_socket.send("<h1>not found file</h1>".encode("utf-8"))
-            print(result)
-        else:
-            new_socket.send(header.encode("utf-8"))
-            new_socket.send(body)
-        finally:
-            print("专用套接字关闭")
-            new_socket.close()
+    def set_response_header(self, status, headers):
+        self.status = status
+        self.headers = [('server', 'fjf_server')]
+        self.headers += headers
 
     def run_server(self):
 
@@ -66,7 +83,29 @@ class WsgiServer:
 
 
 def main():
-    web_server = WsgiServer()
+    arg = sys.argv
+    if len(arg) == 3:
+        try:
+            port = int(arg[1])
+            frame_app = arg[2]
+        except Exception as res:
+            print(res)
+            print("端口号请输入数字:")
+    print(port, frame_app)
+    ret = re.match(r"([^:]+):(.*)", frame_app)
+    if ret:
+        frame_name = ret.group(1)
+        app_name = ret.group(2)
+    else:
+        print("请按照以下方式运行程序:")
+        print("python xxx.py port xxx:xxx")
+        return
+    with open("web_server.conf") as f:
+        eva = eval(f.read())
+    sys.path.append(eva["dynamic_path"])
+    frame = __import__(frame_name)
+    app = getattr(frame, app_name)
+    web_server = WsgiServer(app, port, eva["static_path"])
     web_server.run_server()
 
 
