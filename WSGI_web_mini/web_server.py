@@ -40,7 +40,7 @@ class WsgiServer:
         #     response = header + body
         #     new_socket.send(response.encode("utf-8"))
         #     return
-        if not file_url.endswith(".py"):
+        if not file_url.endswith(".html"):
             try:
                 f = open(self.static_path+file_url, "rb")
                 body = f.read()
@@ -83,29 +83,37 @@ class WsgiServer:
 
 
 def main():
-    arg = sys.argv
-    if len(arg) == 3:
-        try:
-            port = int(arg[1])
-            frame_app = arg[2]
-        except Exception as res:
-            print(res)
-            print("端口号请输入数字:")
-    print(port, frame_app)
-    ret = re.match(r"([^:]+):(.*)", frame_app)
+    # arg = sys.argv
+    # if len(arg) == 3:
+    #     try:
+    #         port = int(arg[1])
+    #         frame_app = arg[2]
+    #     except Exception as res:
+    #         print(res)
+    #         print("端口号请输入数字:")
+    # print(port, frame_app)
+    # ret = re.match(r"([^:]+):(.*)", frame_app)
+    # if ret:
+    #     frame_name = ret.group(1)
+    #     app_name = ret.group(2)
+    # else:
+    #     print("请按照以下方式运行程序:")
+    #     print("python xxx.py port xxx:xxx")
+    #     return
+    with open("web_server.conf") as f:
+        eva = eval(f.read())
+    sys.path.append(eva["dynamic_path"])
+    frame_app_name = eva["frame_app_name"]
+    ret = re.match(r"([^:]+):(.*)", frame_app_name)
     if ret:
         frame_name = ret.group(1)
         app_name = ret.group(2)
     else:
-        print("请按照以下方式运行程序:")
-        print("python xxx.py port xxx:xxx")
+        print("配置有误")
         return
-    with open("web_server.conf") as f:
-        eva = eval(f.read())
-    sys.path.append(eva["dynamic_path"])
     frame = __import__(frame_name)
     app = getattr(frame, app_name)
-    web_server = WsgiServer(app, port, eva["static_path"])
+    web_server = WsgiServer(app, eva["port"], eva["static_path"])
     web_server.run_server()
 
 
